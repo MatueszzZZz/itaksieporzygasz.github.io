@@ -17,15 +17,10 @@
     ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 6px; }
     .container { max-width: 1200px; }
 
-    /* ZAMIANA @apply -> zwykłe CSS (CDN nie obsługuje @apply) */
+    /* badge bez @apply (CDN nie wspiera @apply) */
     .badge {
-      display: inline-block;
-      padding: 0.125rem 0.5rem;          /* py-0.5 px-2 */
-      font-size: 0.75rem;                /* text-xs */
-      line-height: 1rem;
-      border-radius: 9999px;             /* rounded-full */
-      background-color: #FEF3C7;         /* bg-amber-100 */
-      color: #92400E;                    /* text-amber-700 */
+      display:inline-block; padding:0.125rem 0.5rem; font-size:0.75rem; line-height:1rem;
+      border-radius:9999px; background:#FEF3C7; color:#92400E;
     }
 
     /* podświetlanie przycisków */
@@ -40,7 +35,7 @@
 <body class="bg-gray-50 text-gray-800">
   <!-- Promo -->
   <div class="bg-amber-100 border-b border-amber-200 text-amber-900 text-center text-sm py-2 px-4">
-    <strong>Promocja!!!</strong> w <strong>piątek</strong>, jak zamówisz <strong>15 pizz</strong>, to znajdę lek na raka.<br class="sm:hidden"/> 
+    <strong>Promocja!!!</strong> w <strong>piątek</strong>, jak zamówisz <strong>15 pizz</strong>, to „znajdę leka na raka”.<br class="sm:hidden"/> 
     <span class="opacity-70">Poważnie... zamawiając 15 pizz możesz normalnie uratować ludzkość</span>
   </div>
 
@@ -72,7 +67,10 @@
   <section class="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
     <div class="container mx-auto px-4 py-14 grid md:grid-cols-2 gap-8 items-center">
       <div>
-        <h2 class="text-3xl md:text-4xl font-extrabold leading-tight">Pizza jak z Pakistanu. <span class="text-amber-300">Szybko</span>, chrupko, na <span class="underline decoration-amber-300">ul. Parkowa</span>.</h2>
+        <h2 class="text-3xl md:text-4xl font-extrabold leading-tight">
+          Pizza jak z Pakistanu. <span class="text-amber-300">Szybko</span>, chrupko, na 
+          <span class="underline decoration-amber-300">ul. Kasprzaka 18</span>.
+        </h2>
         <p class="mt-4 text-gray-300">Nasza pizza jest z mąki typu 00, wolno wyrastającego ciasta i sosu z pomidorów San Marzano. Wypiekamy w gorącym piecu do ~17000°C dla idealnie sprężystego ranty i lekkiego środka.</p>
         <div class="mt-6 flex gap-3">
           <a href="#menu" class="px-5 py-3 rounded-xl bg-amber-400 text-gray-900 font-semibold">Zamów teraz</a>
@@ -164,7 +162,7 @@
     <div class="container mx-auto px-4 py-12 grid lg:grid-cols-2 gap-8">
       <div>
         <h3 class="text-2xl font-bold mb-2">Dostawa lub odbiór</h3>
-        <p class="text-gray-500 text-sm mb-4">Strefa dowozu do 15 km od lokalu na ul. Parkowa, Dąbrowa Górnicza.</p>
+        <p class="text-gray-500 text-sm mb-4">Strefa dowozu do 15 km od lokalu na <strong>ul. Kasprzaka 18, Dąbrowa Górnicza</strong>.</p>
 
         <div class="flex gap-3 mb-4">
           <label class="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border has-[:checked]:bg-gray-900 has-[:checked]:text-white cursor-pointer transition ring-1 ring-transparent hover:ring-amber-300 hover:bg-amber-50">
@@ -180,7 +178,7 @@
         <div class="space-y-3">
           <div>
             <label class="text-sm font-medium">Adres dostawy</label>
-            <input id="addressInput" type="text" placeholder="np. Krótka 5, Dąbrowa Górnicza" class="mt-1 w-full px-4 py-3 rounded-xl border" />
+            <input id="addressInput" type="text" placeholder="np. Kasprzaka 18, Dąbrowa Górnicza" class="mt-1 w-full px-4 py-3 rounded-xl border" />
           </div>
           <div class="flex gap-3">
             <button id="geolocateBtn" class="px-4 py-3 rounded-xl bg-gray-900 text-white text-sm btn-hover hover:bg-gray-800 hover:ring-2 hover:ring-amber-300">Użyj mojej lokalizacji</button>
@@ -235,7 +233,7 @@
         <ul class="text-gray-700 space-y-1">
           <li>Telefon: <a href="tel:+48123456789" class="underline">+48 123 456 789</a></li>
           <li>E-mail: <a href="mailto:kontakt@itspizza.pl" class="underline">kontakt@itspizza.pl</a></li>
-          <li>Adres: ul. Parkowa, 41-300 Dąbrowa Górnicza</li>
+          <li>Adres: <strong>ul. Kasprzaka 18, 41-300 Dąbrowa Górnicza</strong></li>
         </ul>
         <p class="text-sm text-gray-500 mt-3">Znajdziesz nas też na Instagramie i Facebooku – profile wkrótce.</p>
       </div>
@@ -299,7 +297,7 @@
       <div id="addressBlock" class="space-y-2 hidden">
         <label class="text-sm font-medium">Adres (dla dostawy)</label>
         <!-- tylko do odczytu -->
-        <input id="addressForCart" type="text" class="w-full px-3 py-2 rounded-xl border bg-gray-100" placeholder="Ulica, nr, miasto" readonly />
+        <input id="addressForCart" type="text" class="w-full px-3 py-2 rounded-xl border bg-gray-100" placeholder="Kliknij, aby ustawić adres w sekcji Dostawa" readonly />
         <p class="text-xs text-gray-500">Minimalna kwota zależna od dystansu. Sprawdź sekcję Dostawa.</p>
       </div>
 
@@ -411,7 +409,9 @@
     ];
 
     const PRICE_ADDON = { zwykłe: 4, premium: 7 };
-    const STORE = { lat: 50.3309, lng: 19.2303 }; // Parkowa, DG (przybliżenie)
+
+    // Lokal sklepu — mapę zostawiamy jak było, tylko podpisy zmienione
+    const STORE = { lat: 50.3309, lng: 19.2303 }; // przybliżenie
 
     function deliveryInfo(distanceKm){
       if(distanceKm == null) return {fee: null, min: null, allowed: true};
@@ -554,6 +554,28 @@
       renderCart();
     });
 
+    // >>> Klik w pole adresu w KOSZYKU: zamknij koszyk, ustaw Dostawę, przewiń do sekcji i focus
+    function goToDelivery() {
+      // Ustaw select w koszyku
+      modeSelect.value = 'delivery';
+      addressBlock.classList.remove('hidden');
+
+      // Zaznacz radio w sekcji Dostawa
+      const modeRadios = document.querySelectorAll('input[name="mode"]');
+      modeRadios.forEach(r => { r.checked = (r.value === 'delivery'); });
+
+      // Zamknij koszyk i przewiń
+      closeCartFn();
+      document.getElementById('delivery').scrollIntoView({behavior:'smooth', block:'start'});
+
+      // Focus na polu adresu po krótkiej chwili (po scrollu)
+      setTimeout(()=> document.getElementById('addressInput').focus(), 350);
+
+      renderCart();
+    }
+    document.getElementById('addressForCart').addEventListener('focus', goToDelivery);
+    document.getElementById('addressForCart').addEventListener('click', goToDelivery);
+
     // Własna pizza + limit dodatków + odznacz wszystko
     document.getElementById('addCustomPizza').addEventListener('click', ()=>{
       const size = +document.querySelector('input[name="size"]:checked').value;
@@ -593,7 +615,7 @@
       attribution: '&copy; OpenStreetMap'
     }).addTo(map);
 
-    const storeMarker = L.marker([STORE.lat, STORE.lng]).addTo(map).bindPopup('I Tak Się Porzygasz — ul. Parkowa');
+    const storeMarker = L.marker([STORE.lat, STORE.lng]).addTo(map).bindPopup('I Tak Się Porzygasz — <strong>ul. Kasprzaka 18</strong>');
 
     // Kręgi 5/10/15 km
     L.circle([STORE.lat, STORE.lng], {radius: 5000, color:'#10b981', fill:false}).addTo(map);
@@ -629,13 +651,23 @@
       } else alert('Nie znaleziono adresu.');
     }
 
+    const addressInputEl = document.getElementById('addressInput');
+    const geocodeBtn = document.getElementById('geocodeBtn');
+
     document.getElementById('geocodeBtn').addEventListener('click', ()=>{
-      const q = document.getElementById('addressInput').value.trim(); if(q) geocode(q);
+      const q = addressInputEl.value.trim(); if(q) geocode(q);
+    });
+
+    // Enter w polu adresu = klik "Szukaj adresu"
+    addressInputEl.addEventListener('keydown', (e)=>{
+      if(e.key === 'Enter'){
+        e.preventDefault();
+        geocodeBtn.click();
+      }
     });
 
     // łączenie z koszykiem adresu (TYLKO w jedną stronę: do odczytu w koszyku)
     document.getElementById('addressInput').addEventListener('input', (e)=>{ addressForCart.value = e.target.value; });
-    // (usunięto odwrotną synchronizację — koszyk readonly)
 
     // === CHECKOUT / PŁATNOŚCI (symulacja) ===
     async function askNotificationPermission(){
