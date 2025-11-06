@@ -52,7 +52,9 @@
         <a href="#about" class="hover:text-gray-900 text-gray-600">O nas</a>
         <a href="#contact" class="hover:text-gray-900 text-gray-600">Kontakt</a>
       </nav>
-      <button id="openCart" class="ml-3 px-3 py-2 rounded-xl bg-gray-900 text-white text-sm">Koszyk <span id="cartCount" class="ml-1">(0)</span></button>
+      <button id="openCart" class="ml-3 px-3 py-2 rounded-xl bg-gray-900 text-white text-sm btn-hover hover:bg-gray-800 hover:ring-2 hover:ring-amber-300">
+        Koszyk <span id="cartCount" class="ml-1">(0)</span>
+      </button>
     </div>
   </header>
 
@@ -155,11 +157,11 @@
         <p class="text-gray-500 text-sm mb-4">Strefa dowozu do 15 km od lokalu na ul. Parkowa, Dąbrowa Górnicza.</p>
 
         <div class="flex gap-3 mb-4">
-          <label class="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border has-[:checked]:bg-gray-900 has-[:checked]:text-white cursor-pointer">
+          <label class="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border has-[:checked]:bg-gray-900 has-[:checked]:text-white cursor-pointer transition ring-1 ring-transparent hover:ring-amber-300 hover:bg-amber-50">
             <input type="radio" name="mode" value="pickup" class="hidden" checked />
             Odbiór własny (15–20 min)
           </label>
-          <label class="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border has-[:checked]:bg-gray-900 has-[:checked]:text-white cursor-pointer">
+          <label class="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border has-[:checked]:bg-gray-900 has-[:checked]:text-white cursor-pointer transition ring-1 ring-transparent hover:ring-amber-300 hover:bg-amber-50">
             <input type="radio" name="mode" value="delivery" class="hidden" />
             Dostawa (35–50 min)
           </label>
@@ -170,9 +172,9 @@
             <label class="text-sm font-medium">Adres dostawy</label>
             <input id="addressInput" type="text" placeholder="np. Krótka 5, Dąbrowa Górnicza" class="mt-1 w-full px-4 py-3 rounded-xl border" />
           </div>
-            <div class="flex gap-3">
-            <button id="geolocateBtn" class="px-4 py-3 rounded-xl bg-gray-900 text-white text-sm">Użyj mojej lokalizacji</button>
-            <button id="geocodeBtn" class="px-4 py-3 rounded-xl border text-sm">Szukaj adresu</button>
+          <div class="flex gap-3">
+            <button id="geolocateBtn" class="px-4 py-3 rounded-xl bg-gray-900 text-white text-sm btn-hover hover:bg-gray-800 hover:ring-2 hover:ring-amber-300">Użyj mojej lokalizacji</button>
+            <button id="geocodeBtn" class="px-4 py-3 rounded-xl border text-sm btn-hover hover:bg-amber-50 hover:ring-2 hover:ring-amber-300">Szukaj adresu</button>
           </div>
           <p class="text-xs text-gray-500">Geokodowanie przez Nominatim (OpenStreetMap) – może wymagać zgody przeglądarki.</p>
 
@@ -325,25 +327,25 @@
     // === DANE ===
     const PIZZE = [
       {name: 'Margherita', desc: 'sos pomidorowy, mozzarella, bazylia', price32: 29},
-      {name: 'Marinara', desc: 'sos pomidorowy, czosnek, oregano', price32: 26},
-      {name: 'Funghi', desc: 'pieczarki, mozzarella', price32: 33},
-      {name: 'Salame', desc: 'salami, mozzarella', price32: 36},
-      {name: 'Prosciutto', desc: 'szynka, mozzarella', price32: 36},
-      {name: 'Capricciosa', desc: 'szynka, pieczarki, karczochy, oliwki', price32: 41},
-      {name: 'Quattro Formaggi', desc: 'mix 4 serów', price32: 43},
-      {name: 'Diavola', desc: 'pikantne salami, peperoncino', price32: 39},
-      {name: 'Hawaii', desc: 'szynka, ananas', price32: 38},
-      {name: 'Vegetariana', desc: 'warzywa sezonowe', price32: 37},
-      {name: 'Tonno', desc: 'tuńczyk, cebula', price32: 40},
-      {name: 'Frutti di Mare', desc: 'owoce morza, czosnek', price32: 47},
-      {name: 'Parma', desc: 'prosciutto crudo, rukola, grana', price32: 45},
-      {name: 'BBQ', desc: 'kurczak, sos BBQ, cebula', price32: 42},
-      {name: 'Bufalina', desc: 'buffala, pomidorki, bazylia', price32: 44},
-      {name: 'Truflowa', desc: 'krem truflowy, pieczarki, grana', price32: 46},
-      {name: 'Calabrese', desc: 'nduja, papryczki, cebula', price32: 43},
-      {name: 'Carbonara', desc: 'guanciale, pecorino, pieprz', price32: 44},
-      {name: 'Pollo', desc: 'kurczak, kukurydza, papryka', price32: 41},
-      {name: 'Boscaiola', desc: 'pieczarki, boczek, śmietanka', price32: 43}
+      {name: 'Marinara', desc: 'sos pomidorowy, czosnek, oregano (bez sera)', price32: 26},
+      {name: 'Funghi', desc: 'sos pomidorowy, mozzarella, pieczarki', price32: 33},
+      {name: 'Salame', desc: 'sos pomidorowy, mozzarella, salami', price32: 36},
+      {name: 'Prosciutto', desc: 'sos pomidorowy, mozzarella, szynka', price32: 36},
+      {name: 'Capricciosa', desc: 'sos pomidorowy, mozzarella, szynka, pieczarki, karczochy, oliwki', price32: 41},
+      {name: 'Quattro Formaggi', desc: 'mozzarella, (mix czterech serów) — bez sosu pomidorowego', price32: 43},
+      {name: 'Diavola', desc: 'sos pomidorowy, mozzarella, pikantne salami, peperoncino', price32: 39},
+      {name: 'Hawaii', desc: 'sos pomidorowy, mozzarella, szynka, ananas', price32: 38},
+      {name: 'Vegetariana', desc: 'sos pomidorowy, mozzarella, warzywa sezonowe', price32: 37},
+      {name: 'Tonno', desc: 'sos pomidorowy, mozzarella, tuńczyk, cebula', price32: 40},
+      {name: 'Frutti di Mare', desc: 'sos pomidorowy, mozzarella, owoce morza, czosnek', price32: 47},
+      {name: 'Parma', desc: 'sos pomidorowy, mozzarella, prosciutto crudo, rukola, grana', price32: 45},
+      {name: 'BBQ', desc: 'mozzarella, kurczak, sos BBQ, cebula (bez sosu pomidorowego)', price32: 42},
+      {name: 'Bufalina', desc: 'sos pomidorowy, mozzarella di bufala, pomidorki, bazylia', price32: 44},
+      {name: 'Truflowa', desc: 'mozzarella, krem truflowy, pieczarki, grana (bez sosu pomidorowego)', price32: 46},
+      {name: 'Calabrese', desc: 'sos pomidorowy, mozzarella, nduja, papryczki, cebula', price32: 43},
+      {name: 'Carbonara', desc: 'mozzarella, guanciale, pecorino, pieprz (bez sosu pomidorowego)', price32: 44},
+      {name: 'Pollo', desc: 'sos pomidorowy, mozzarella, kurczak, kukurydza, papryka', price32: 41},
+      {name: 'Boscaiola', desc: 'mozzarella, pieczarki, boczek, śmietanka (bez sosu pomidorowego)', price32: 43}
     ];
 
     const TOPPINGS = [
