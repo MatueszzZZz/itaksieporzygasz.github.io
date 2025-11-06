@@ -1,14 +1,717 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0; url=ITakSiePorzygasz.html">
-  <link rel="canonical" href="ITakSiePorzygasz.html">
-  <title>Ładowanie…</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>I Tak Się Porzygasz — Pizzeria</title>
+  <!-- Tailwind CSS (CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <meta name="theme-color" content="#111827" />
+  <!-- Leaflet (mapa) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  
+  <style>
+    /* prosty scrollbar */
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 6px; }
+    .container { max-width: 1200px; }
+
+    /* ZAMIANA @apply -> zwykłe CSS (CDN nie obsługuje @apply) */
+    .badge {
+      display: inline-block;
+      padding: 0.125rem 0.5rem;          /* py-0.5 px-2 */
+      font-size: 0.75rem;                /* text-xs */
+      line-height: 1rem;
+      border-radius: 9999px;             /* rounded-full */
+      background-color: #FEF3C7;         /* bg-amber-100 */
+      color: #92400E;                    /* text-amber-700 */
+    }
+
+    /* podświetlanie przycisków */
+    .btn-hover{ transition: background-color .15s ease, box-shadow .15s ease; }
+    .btn-hover:hover{ box-shadow: 0 6px 16px rgb(0 0 0 / 0.15); }
+
+    /* map vs. cart z-index fix */
+    #cartDrawer{ z-index: 10000; }
+    .leaflet-container{ z-index: 0 !important; }
+  </style>
 </head>
-<body>
-  <p>Przekierowanie… Jeśli nie zadziała, kliknij
-    <a href="ITakSiePorzygasz.html">tutaj</a>.
-  </p>
+<body class="bg-gray-50 text-gray-800">
+  <!-- Promo -->
+  <div class="bg-amber-100 border-b border-amber-200 text-amber-900 text-center text-sm py-2 px-4">
+    <strong>Promocja!!!</strong> w <strong>piątek</strong>, jak zamówisz <strong>15 pizz</strong>, to znajdę lek na raka.<br class="sm:hidden"/> 
+    <span class="opacity-70">Poważnie... zamawiając 15 pizz możesz normalnie uratować ludzkość</span>
+  </div>
+
+  <!-- Header / Nav -->
+  <header class="bg-white shadow-sm sticky top-0 z-40">
+    <div class="container mx-auto px-4 py-3 flex items-center gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-gray-900 text-white grid place-items-center font-bold">ITSP</div>
+        <div>
+          <h1 class="text-xl font-bold leading-tight">I Tak Się Porzygasz</h1>
+          <p class="text-xs text-gray-500 -mt-1">pizzeria • Dąbrowa Górnicza</p>
+        </div>
+      </div>
+      <nav class="ml-auto hidden md:flex gap-6 text-sm">
+        <a href="#menu" class="hover:text-gray-900 text-gray-600">Menu</a>
+        <a href="#custom" class="hover:text-gray-900 text-gray-600">Składniki</a>
+        <a href="#drinks" class="hover:text-gray-900 text-gray-600">Napoje</a>
+        <a href="#delivery" class="hover:text-gray-900 text-gray-600">Dostawa</a>
+        <a href="#about" class="hover:text-gray-900 text-gray-600">O nas</a>
+        <a href="#contact" class="hover:text-gray-900 text-gray-600">Kontakt</a>
+      </nav>
+      <button id="openCart" class="ml-3 px-3 py-2 rounded-xl bg-gray-900 text-white text-sm btn-hover hover:bg-gray-800 hover:ring-2 hover:ring-amber-300">
+        Koszyk <span id="cartCount" class="ml-1">(0)</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
+    <div class="container mx-auto px-4 py-14 grid md:grid-cols-2 gap-8 items-center">
+      <div>
+        <h2 class="text-3xl md:text-4xl font-extrabold leading-tight">Pizza jak z Pakistanu. <span class="text-amber-300">Szybko</span>, chrupko, na <span class="underline decoration-amber-300">ul. Parkowa</span>.</h2>
+        <p class="mt-4 text-gray-300">Nasza pizza jest z mąki typu 00, wolno wyrastającego ciasta i sosu z pomidorów San Marzano. Wypiekamy w gorącym piecu do ~17000°C dla idealnie sprężystego ranty i lekkiego środka.</p>
+        <div class="mt-6 flex gap-3">
+          <a href="#menu" class="px-5 py-3 rounded-xl bg-amber-400 text-gray-900 font-semibold">Zamów teraz</a>
+          <a href="#delivery" class="px-5 py-3 rounded-xl bg-white/10 ring-1 ring-white/20">Sprawdź dostawę</a>
+        </div>
+      </div>
+      <div class="md:justify-self-end">
+        <div class="bg-white/5 border border-white/10 rounded-2xl p-4 md:p-6">
+          <ul class="text-sm text-gray-200 space-y-2">
+            <li>• Dwie wielkości: <strong>32 cm</strong> i <strong>42 cm</strong> (+6 zł)</li>
+            <li>• Limit dodatków: <strong>max 5</strong> (oprócz składników bazowych)</li>
+            <li>• Płatności: Przelewy24, PayU, Stripe, gotówka, karta przy odbiorze</li>
+            <li>• Strefa dostawy: do <strong>15 km</strong> od lokalu</li>
+            <li>• Minimalne zamówienie na dowóz: zależne od dystansu (szczegóły niżej)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MENU: 20 pizz z cenami -->
+  <section id="menu" class="container mx-auto px-4 py-12">
+    <div class="flex items-end justify-between gap-4 mb-6">
+      <div>
+        <h3 class="text-2xl font-bold">Menu</h3>
+        <p class="text-gray-500 text-sm">Wybierz pizzę i dodaj do koszyka. Ceny dla 32 cm. 42 cm = +6 zł.</p>
+      </div>
+      <div class="text-sm text-gray-600">Rozmiar domyślny: <span class="font-semibold">32 cm</span></div>
+    </div>
+
+    <div id="pizzaGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      <!-- Wygenerowane skryptem z listy -->
+    </div>
+  </section>
+
+  <!-- CUSTOMIZER -->
+  <section id="custom" class="bg-white border-t border-b">
+    <div class="container mx-auto px-4 py-12">
+      <h3 class="text-2xl font-bold mb-2">Złóż własną pizzę</h3>
+      <p class="text-gray-500 mb-6 text-sm">Wybierz rozmiar, dodatki (max 5), a potem dodaj do koszyka.</p>
+
+      <div class="grid lg:grid-cols-3 gap-8">
+        <!-- Rozmiar -->
+        <div class="lg:col-span-1">
+          <h4 class="font-semibold mb-3">Rozmiar</h4>
+          <div class="flex gap-3">
+            <label class="flex items-center gap-2 px-4 py-3 rounded-xl border has-[:checked]:bg-gray-900 has-[:checked]:text-white cursor-pointer">
+              <input type="radio" name="size" value="32" class="hidden" checked />
+              <span class="text-sm">32 cm</span>
+            </label>
+            <label class="flex items-center gap-2 px-4 py-3 rounded-xl border has-[:checked]:bg-gray-900 has-[:checked]:text-white cursor-pointer">
+              <input type="radio" name="size" value="42" class="hidden" />
+              <span class="text-sm">42 cm (+6 zł)</span>
+            </label>
+          </div>
+
+          <div class="mt-6">
+            <h4 class="font-semibold mb-2">Podstawa</h4>
+            <p class="text-sm text-gray-500">Sos pomidorowy, mozzarella fior di latte, oliwa, bazylia.</p>
+          </div>
+        </div>
+
+        <!-- Dodatki -->
+        <div class="lg:col-span-2">
+          <h4 class="font-semibold mb-3">Dodatki (max 5)</h4>
+          <div id="toppings" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            <!-- Generowane skryptem: 35 pozycji -->
+          </div>
+
+          <div class="mt-6 flex items-center gap-4 flex-wrap">
+            <button id="addCustomPizza" class="px-5 py-3 rounded-xl bg-gray-900 text-white text-sm font-semibold btn-hover hover:bg-gray-800 hover:ring-2 hover:ring-amber-300">Dodaj własną do koszyka</button>
+            <button id="clearToppings" type="button" class="px-4 py-3 rounded-xl border text-sm btn-hover hover:bg-amber-50">Odznacz wszystko</button>
+            <div class="text-sm text-gray-600">Cena bazowa własnej: <span class="font-semibold">27 zł (32 cm)</span>, dodatki: zwykłe +4 zł, premium +7 zł. <span id="toppingCount" class="ml-2 text-xs text-gray-500">0/5</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DRINKS -->
+  <section id="drinks" class="container mx-auto px-4 py-12">
+    <h3 class="text-2xl font-bold mb-2">Napoje</h3>
+    <p class="text-gray-500 mb-6 text-sm">Dobierz napój do zamówienia.</p>
+    <div id="drinksGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+  </section>
+
+  <!-- DELIVERY & MAP -->
+  <section id="delivery" class="bg-white border-t">
+    <div class="container mx-auto px-4 py-12 grid lg:grid-cols-2 gap-8">
+      <div>
+        <h3 class="text-2xl font-bold mb-2">Dostawa lub odbiór</h3>
+        <p class="text-gray-500 text-sm mb-4">Strefa dowozu do 15 km od lokalu na ul. Parkowa, Dąbrowa Górnicza.</p>
+
+        <div class="flex gap-3 mb-4">
+          <label class="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border has-[:checked]:bg-gray-900 has-[:checked]:text-white cursor-pointer transition ring-1 ring-transparent hover:ring-amber-300 hover:bg-amber-50">
+            <input type="radio" name="mode" value="pickup" class="hidden" checked />
+            Odbiór własny (15–20 min)
+          </label>
+          <label class="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border has-[:checked]:bg-gray-900 has-[:checked]:text-white cursor-pointer transition ring-1 ring-transparent hover:ring-amber-300 hover:bg-amber-50">
+            <input type="radio" name="mode" value="delivery" class="hidden" />
+            Dostawa (35–50 min)
+          </label>
+        </div>
+
+        <div class="space-y-3">
+          <div>
+            <label class="text-sm font-medium">Adres dostawy</label>
+            <input id="addressInput" type="text" placeholder="np. Krótka 5, Dąbrowa Górnicza" class="mt-1 w-full px-4 py-3 rounded-xl border" />
+          </div>
+          <div class="flex gap-3">
+            <button id="geolocateBtn" class="px-4 py-3 rounded-xl bg-gray-900 text-white text-sm btn-hover hover:bg-gray-800 hover:ring-2 hover:ring-amber-300">Użyj mojej lokalizacji</button>
+            <button id="geocodeBtn" class="px-4 py-3 rounded-xl border text-sm btn-hover hover:bg-amber-50 hover:ring-2 hover:ring-amber-300">Szukaj adresu</button>
+          </div>
+          <p class="text-xs text-gray-500">Geokodowanie przez Nominatim (OpenStreetMap) – może wymagać zgody przeglądarki.</p>
+
+          <div class="p-4 rounded-xl bg-gray-50 border text-sm">
+            <div><strong>Opłata & minimum (w zależności od dystansu)</strong></div>
+            <ul class="list-disc ml-5 mt-2 space-y-1">
+              <li>0–5 km: opłata 6 zł, minimum 35 zł</li>
+              <li>5–10 km: opłata 10 zł, minimum 45 zł</li>
+              <li>10–15 km: opłata 15 zł, minimum 60 zł</li>
+              <li>>15 km: brak dostawy</li>
+            </ul>
+          </div>
+
+          <div class="p-4 rounded-xl bg-amber-50 border border-amber-200 text-sm text-amber-900" id="distanceInfo">Dystans do lokalu: — km. Strefa nieustalona.</div>
+        </div>
+      </div>
+
+      <div>
+        <div id="map" class="w-full h-[420px] rounded-2xl border"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="about" class="container mx-auto px-4 py-12">
+    <div class="grid lg:grid-cols-2 gap-8 items-start">
+      <div>
+        <h3 class="text-2xl font-bold mb-2">O nas</h3>
+        <p class="text-gray-600">W „I Tak Się Porzygasz” pieczemy ciasto z mąki, którą zajebaliśmy szczurom i innych sztucznych gówien, które znaleźliśmy po drodze do pracy, korzystamy z włoskiej mozzarelli fior di latte, oliwy extra vergine i świeżej bazylii. Sos gotujemy z pomidorów San Marzano bez cukru, doprawiając pieczoną czosnkową oliwą. Piec nagrzewamy do ~17000°C, by uzyskać jebany węgiel na brzegach i brak wnętrza. Klasyki? Raczej gówno. Eksperymenty? Prędzej zbrodnie wojenne – smak broni się sam.</p>
+      </div>
+      <div class="p-6 bg-white rounded-2xl border">
+        <h4 class="font-semibold">Godziny otwarcia</h4>
+        <ul class="mt-2 text-sm text-gray-600 space-y-1">
+          <li>pn–cz: 11:00–22:00</li>
+          <li>pt–nd: 11:00–24:00</li>
+        </ul>
+        <h4 class="font-semibold mt-4">Alergeny</h4>
+        <p class="text-sm text-gray-600">Zawiera: gluten, laktozę. Możliwość przygotowania opcji bezlaktozowych i wegetariańskich. Kuchnia nie jest wolna od śladowych ilości orzechów.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact" class="bg-white border-t">
+    <div class="container mx-auto px-4 py-12 grid lg:grid-cols-2 gap-8">
+      <div>
+        <h3 class="text-2xl font-bold mb-2">Kontakt z nami</h3>
+        <ul class="text-gray-700 space-y-1">
+          <li>Telefon: <a href="tel:+48123456789" class="underline">+48 123 456 789</a></li>
+          <li>E-mail: <a href="mailto:kontakt@itspizza.pl" class="underline">kontakt@itspizza.pl</a></li>
+          <li>Adres: ul. Parkowa, 41-300 Dąbrowa Górnicza</li>
+        </ul>
+        <p class="text-sm text-gray-500 mt-3">Znajdziesz nas też na Instagramie i Facebooku – profile wkrótce.</p>
+      </div>
+      <form id="contactForm" class="p-6 bg-gray-50 border rounded-2xl space-y-3">
+        <div>
+          <label class="text-sm font-medium">Twoje imię</label>
+          <input type="text" required class="mt-1 w-full px-4 py-3 rounded-xl border" />
+        </div>
+        <div>
+          <label class="text-sm font-medium">E-mail</label>
+          <input type="email" required class="mt-1 w-full px-4 py-3 rounded-xl border" />
+        </div>
+        <div>
+          <label class="text-sm font-medium">Wiadomość</label>
+          <textarea rows="4" required class="mt-1 w-full px-4 py-3 rounded-xl border"></textarea>
+        </div>
+        <label class="flex items-center gap-2 text-sm">
+          <input id="consentContact" type="checkbox" class="" /> Wyrażam zgodę na kontakt w sprawie mojego zamówienia (cookies / RODO)
+        </label>
+        <button class="px-5 py-3 rounded-xl bg-gray-900 text-white text-sm">Wyślij</button>
+        <p id="contactStatus" class="text-sm text-gray-500"></p>
+      </form>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="border-t">
+    <div class="container mx-auto px-4 py-8 text-sm text-gray-500 flex flex-wrap items-center gap-3">
+      <span>© <span id="year"></span> I Tak Się Porzygasz</span>
+      <span class="mx-2">•</span>
+      <a href="#" id="openCookies" class="underline">Ustawienia cookies</a>
+      <span class="mx-2">•</span>
+      <a href="#" class="underline">Regulamin</a>
+      <span class="mx-2">•</span>
+      <a href="#" class="underline">Polityka prywatności</a>
+    </div>
+  </footer>
+
+  <!-- CART DRAWER -->
+  <div id="cartDrawer" class="fixed top-0 right-0 w-full sm:w-[420px] h-full bg-white shadow-2xl translate-x-full transition-transform flex flex-col">
+    <div class="p-4 border-b flex items-center justify-between">
+      <h4 class="font-semibold">Koszyk</h4>
+      <button id="closeCart" class="text-gray-500">Zamknij</button>
+    </div>
+    <div id="cartItems" class="flex-1 overflow-auto p-4 space-y-3"></div>
+    <div class="border-t p-4 space-y-4">
+      <div class="text-sm space-y-2">
+        <div class="flex items-center justify-between"><span>Suma pozycji</span><span id="subtotal">0,00 zł</span></div>
+        <div class="flex items-center justify-between"><span>Opłata za dostawę</span><span id="deliveryFee">—</span></div>
+        <div class="flex items-center justify-between font-semibold text-lg"><span>Do zapłaty</span><span id="total">0,00 zł</span></div>
+      </div>
+
+      <div class="space-y-2">
+        <label class="text-sm font-medium">Forma odbioru</label>
+        <select id="modeSelect" class="w-full px-3 py-2 rounded-xl border">
+          <option value="pickup">Odbiór własny</option>
+          <option value="delivery">Dostawa</option>
+        </select>
+      </div>
+
+      <div id="addressBlock" class="space-y-2 hidden">
+        <label class="text-sm font-medium">Adres (dla dostawy)</label>
+        <!-- tylko do odczytu -->
+        <input id="addressForCart" type="text" class="w-full px-3 py-2 rounded-xl border bg-gray-100" placeholder="Ulica, nr, miasto" readonly />
+        <p class="text-xs text-gray-500">Minimalna kwota zależna od dystansu. Sprawdź sekcję Dostawa.</p>
+      </div>
+
+      <div class="space-y-2">
+        <label class="text-sm font-medium">Płatność</label>
+        <select id="paymentSelect" class="w-full px-3 py-2 rounded-xl border">
+          <option value="p24">Przelewy24</option>
+          <option value="payu">PayU</option>
+          <option value="stripe">Stripe</option>
+          <option value="cash">Gotówka</option>
+          <option value="card">Karta przy odbiorze</option>
+        </select>
+      </div>
+
+      <label class="flex items-center gap-2 text-sm">
+        <input id="consentUpdates" type="checkbox" /> Chcę automatyczne powiadomienia o statusie (SMS/e-mail/Push)*
+      </label>
+      <p class="text-[11px] text-gray-500">*W wersji GitHub Pages wysyłamy tylko lokalne powiadomienia przeglądarkowe (jeśli wyrazisz zgodę).</p>
+
+      <button id="checkoutBtn" class="w-full px-5 py-3 rounded-xl bg-amber-400 text-gray-900 font-semibold">Przejdź do płatności</button>
+      <div id="orderStatus" class="text-sm text-gray-600"></div>
+    </div>
+  </div>
+
+  <!-- Cookies bar -->
+  <div id="cookiesBar" class="fixed bottom-0 inset-x-0 bg-gray-900 text-white p-4 md:p-5 flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-6 z-50 hidden">
+    <div class="text-sm leading-snug">Używamy plików cookies do działania koszyka i powiadomień o zamówieniu. Zgoda umożliwia kontakt w sprawie zamówienia.</div>
+    <div class="ml-auto flex gap-2">
+      <button id="cookiesDecline" class="px-4 py-2 rounded-lg bg-white/10">Odrzuć</button>
+      <button id="cookiesAccept" class="px-4 py-2 rounded-lg bg-amber-400 text-gray-900 font-semibold">Akceptuj</button>
+    </div>
+  </div>
+
+  <script>
+    // === DANE ===
+    const PIZZE = [
+      {name: 'Margherita', desc: 'sos pomidorowy, mozzarella, bazylia', price32: 29},
+      {name: 'Marinara', desc: 'sos pomidorowy, czosnek, oregano (bez sera)', price32: 26},
+      {name: 'Funghi', desc: 'sos pomidorowy, mozzarella, pieczarki', price32: 33},
+      {name: 'Salame', desc: 'sos pomidorowy, mozzarella, salami', price32: 36},
+      {name: 'Prosciutto', desc: 'sos pomidorowy, mozzarella, szynka', price32: 36},
+      {name: 'Capricciosa', desc: 'sos pomidorowy, mozzarella, szynka, pieczarki, karczochy, oliwki', price32: 41},
+      {name: 'Quattro Formaggi', desc: 'mozzarella, (mix czterech serów) — bez sosu pomidorowego', price32: 43},
+      {name: 'Diavola', desc: 'sos pomidorowy, mozzarella, pikantne salami, peperoncino', price32: 39},
+      {name: 'Hawaii', desc: 'sos pomidorowy, mozzarella, szynka, ananas', price32: 38},
+      {name: 'Vegetariana', desc: 'sos pomidorowy, mozzarella, warzywa sezonowe', price32: 37},
+      {name: 'Tonno', desc: 'sos pomidorowy, mozzarella, tuńczyk, cebula', price32: 40},
+      {name: 'Frutti di Mare', desc: 'sos pomidorowy, mozzarella, owoce morza, czosnek', price32: 47},
+      {name: 'Parma', desc: 'sos pomidorowy, mozzarella, prosciutto crudo, rukola, grana', price32: 45},
+      {name: 'BBQ', desc: 'mozzarella, kurczak, sos BBQ, cebula (bez sosu pomidorowego)', price32: 42},
+      {name: 'Bufalina', desc: 'sos pomidorowy, mozzarella di bufala, pomidorki, bazylia', price32: 44},
+      {name: 'Truflowa', desc: 'mozzarella, krem truflowy, pieczarki, grana (bez sosu pomidorowego)', price32: 46},
+      {name: 'Calabrese', desc: 'sos pomidorowy, mozzarella, nduja, papryczki, cebula', price32: 43},
+      {name: 'Carbonara', desc: 'mozzarella, guanciale, pecorino, pieprz (bez sosu pomidorowego)', price32: 44},
+      {name: 'Pollo', desc: 'sos pomidorowy, mozzarella, kurczak, kukurydza, papryka', price32: 41},
+      {name: 'Boscaiola', desc: 'mozzarella, pieczarki, boczek, śmietanka (bez sosu pomidorowego)', price32: 43}
+    ];
+
+    const TOPPINGS = [
+      // 35 pozycji
+      {name:'pieczarki', type:'zwykłe'},
+      {name:'cebula', type:'zwykłe'},
+      {name:'papryka', type:'zwykłe'},
+      {name:'oliwki czarne', type:'zwykłe'},
+      {name:'oliwki zielone', type:'zwykłe'},
+      {name:'kukurydza', type:'zwykłe'},
+      {name:'rukola', type:'zwykłe'},
+      {name:'pomidorki', type:'zwykłe'},
+      {name:'jalapeño', type:'zwykłe'},
+      {name:'czosnek', type:'zwykłe'},
+      {name:'ananas', type:'zwykłe'},
+      {name:'szynka', type:'zwykłe'},
+      {name:'salami', type:'zwykłe'},
+      {name:'boczek', type:'zwykłe'},
+      {name:'kurczak', type:'zwykłe'},
+      {name:'tuńczyk', type:'zwykłe'},
+      {name:'ser feta', type:'zwykłe'},
+      {name:'ser gorgonzola', type:'premium'},
+      {name:'ser grana padano', type:'premium'},
+      {name:'bufala', type:'premium'},
+      {name:'karczochy', type:'premium'},
+      {name:'karczochy rzymskie', type:'premium'},
+      {name:'pesto bazyliowe', type:'premium'},
+      {name:'krem truflowy', type:'premium'},
+      {name:'nduja', type:'premium'},
+      {name:'prosciutto crudo', type:'premium'},
+      {name:'speck', type:'premium'},
+      {name:'rukola baby', type:'premium'},
+      {name:'kapary', type:'zwykłe'},
+      {name:'papryka grillowana', type:'premium'},
+      {name:'cukinia grillowana', type:'premium'},
+      {name:'bakłażan grillowany', type:'premium'},
+      {name:'karamelizowana cebula', type:'premium'},
+      {name:'krewetki', type:'premium'},
+      {name:'małże', type:'premium'},
+      {name:'sos BBQ', type:'zwykłe'}
+    ];
+
+    const DRINKS = [
+      {name:'Woda 0.5L', price:6},
+      {name:'Woda gaz. 0.5L', price:6},
+      {name:'Coca-Cola 0.5L', price:8},
+      {name:'Coca-Cola 1L', price:12},
+      {name:'Fanta 0.5L', price:8},
+      {name:'Sprite 0.5L', price:8},
+      {name:'Sok pomarańczowy 0.33L', price:7},
+      {name:'Sok jabłkowy 0.33L', price:7},
+      {name:'Lemoniada 0.4L', price:9}
+    ];
+
+    const PRICE_ADDON = { zwykłe: 4, premium: 7 };
+    const STORE = { lat: 50.3309, lng: 19.2303 }; // Parkowa, DG (przybliżenie)
+
+    function deliveryInfo(distanceKm){
+      if(distanceKm == null) return {fee: null, min: null, allowed: true};
+      if(distanceKm <= 5) return {fee: 6, min: 35, allowed: true};
+      if(distanceKm <= 10) return {fee: 10, min: 45, allowed: true};
+      if(distanceKm <= 15) return {fee: 15, min: 60, allowed: true};
+      return {fee: null, min: null, allowed: false};
+    }
+
+    // === RENDER MENU ===
+    const grid = document.getElementById('pizzaGrid');
+    PIZZE.forEach((p, idx)=>{
+      const price42 = p.price32 + 6;
+      const card = document.createElement('div');
+      card.className = 'p-4 bg-white border rounded-2xl flex flex-col';
+      card.innerHTML = `
+        <div class="flex-1">
+          <div class="flex items-start justify-between gap-3">
+            <h5 class="font-semibold text-lg">${p.name}</h5>
+            <span class="badge">${idx<5?'klasyk':'specjał'}</span>
+          </div>
+          <p class="text-sm text-gray-600 mt-1">${p.desc}</p>
+        </div>
+        <div class="mt-4 grid grid-cols-2 gap-2 text-sm">
+          <button data-size="32" data-idx="${idx}" class="addPizza btn-hover px-3 py-2 rounded-xl bg-gray-900 text-white hover:bg-gray-800 hover:ring-2 hover:ring-amber-300">32 cm — ${p.price32} zł</button>
+          <button data-size="42" data-idx="${idx}" class="addPizza btn-hover px-3 py-2 rounded-xl border hover:bg-amber-50 hover:ring-2 hover:ring-amber-300">42 cm — ${price42} zł</button>
+        </div>`;
+      grid.appendChild(card);
+    });
+
+    // === RENDER TOPPINGS ===
+    const tWrap = document.getElementById('toppings');
+    TOPPINGS.forEach((t,i)=>{
+      const item = document.createElement('label');
+      item.className = 'flex items-center gap-2 p-2 rounded-lg border bg-white text-sm cursor-pointer';
+      item.innerHTML = `<input type="checkbox" value="${t.name}" data-type="${t.type}" class="topping"> ${t.name} <span class="ml-auto text-xs px-2 py-0.5 rounded-full ${t.type==='premium'?'bg-purple-100 text-purple-700':'bg-gray-100 text-gray-700'}">${t.type} ${t.type==='premium'?'+7 zł':'+4 zł'}</span>`;
+      tWrap.appendChild(item);
+    });
+
+    // === RENDER DRINKS ===
+    const dGrid = document.getElementById('drinksGrid');
+    DRINKS.forEach((d, idx)=>{
+      const card = document.createElement('div');
+      card.className = 'p-4 bg-white border rounded-2xl flex items-center justify-between';
+      card.innerHTML = `<div><div class="font-medium">${d.name}</div><div class="text-sm text-gray-500">${d.price} zł</div></div>
+      <button data-idx="${idx}" class="addDrink btn-hover px-3 py-2 rounded-xl bg-gray-900 text-white text-sm hover:bg-gray-800 hover:ring-2 hover:ring-amber-300">Dodaj</button>`;
+      dGrid.appendChild(card);
+    });
+
+    // === KOSZYK ===
+    const cart = JSON.parse(localStorage.getItem('cart')||'[]');
+    const cartBtn = document.getElementById('openCart');
+    const drawer = document.getElementById('cartDrawer'); // z-index podbity vs mapa
+    const closeCart = document.getElementById('closeCart');
+    const cartItems = document.getElementById('cartItems');
+    const cartCount = document.getElementById('cartCount');
+    const subtotalEl = document.getElementById('subtotal');
+    const deliveryFeeEl = document.getElementById('deliveryFee');
+    const totalEl = document.getElementById('total');
+    const modeSelect = document.getElementById('modeSelect');
+    const addressBlock = document.getElementById('addressBlock');
+    const addressForCart = document.getElementById('addressForCart');
+    const paymentSelect = document.getElementById('paymentSelect');
+    const checkoutBtn = document.getElementById('checkoutBtn');
+    const orderStatus = document.getElementById('orderStatus');
+
+    function openCart(){ drawer.classList.remove('translate-x-full'); renderCart(); }
+    function closeCartFn(){ drawer.classList.add('translate-x-full'); }
+
+    cartBtn.addEventListener('click', openCart);
+    closeCart.addEventListener('click', closeCartFn);
+
+    function addToCart(item){
+      cart.push(item); saveCart();
+      pulseCart();
+    }
+    function removeFromCart(i){ cart.splice(i,1); saveCart(); }
+    function saveCart(){ localStorage.setItem('cart', JSON.stringify(cart)); renderCart(); }
+    function pulseCart(){ cartBtn.classList.add('ring-2','ring-amber-300'); setTimeout(()=>cartBtn.classList.remove('ring-2','ring-amber-300'),600); }
+
+    function renderCart(){
+      cartCount.textContent = `(${cart.length})`;
+      cartItems.innerHTML = '';
+      let subtotal = 0;
+      cart.forEach((it, i)=>{
+        const line = document.createElement('div');
+        line.className = 'p-3 border rounded-xl flex items-start justify-between gap-3';
+        const opts = [];
+        if(it.size) opts.push(it.size+' cm');
+        if(it.toppings && it.toppings.length) opts.push('dodatki: '+it.toppings.join(', '));
+        line.innerHTML = `
+          <div>
+            <div class="font-medium">${it.name}</div>
+            <div class="text-xs text-gray-500">${opts.join(' • ')}</div>
+          </div>
+          <div class="text-right">
+            <div class="font-semibold">${it.price.toFixed(2)} zł</div>
+            <button class="text-xs text-red-600 underline" data-remove="${i}">Usuń</button>
+          </div>`;
+        cartItems.appendChild(line);
+        subtotal += it.price;
+      });
+      subtotalEl.textContent = `${subtotal.toFixed(2)} zł`;
+
+      // Dostawa
+      let feeStr = '—';
+      let feeVal = 0;
+      if(modeSelect.value==='delivery'){
+        if(currentDistanceKm==null){ feeStr = 'ustal po adresie'; }
+        else {
+          const info = deliveryInfo(currentDistanceKm);
+          if(info.allowed) { feeVal = info.fee; feeStr = info.fee.toFixed(2)+' zł'; }
+          else { feeStr = 'poza strefą'; }
+        }
+      }
+      deliveryFeeEl.textContent = feeStr;
+      const total = subtotal + feeVal;
+      totalEl.textContent = `${total.toFixed(2)} zł`;
+    }
+
+    // Kliki w menu
+    document.addEventListener('click',(e)=>{
+      if(e.target.matches('.addPizza')){
+        const idx = +e.target.dataset.idx; const size = +e.target.dataset.size; const base = PIZZE[idx].price32 + (size===42?6:0);
+        addToCart({type:'pizza', name:PIZZE[idx].name, size, toppings:[], price: base});
+      }
+      if(e.target.matches('.addDrink')){
+        const d = DRINKS[+e.target.dataset.idx];
+        addToCart({type:'drink', name:d.name, price:d.price});
+      }
+    });
+
+    cartItems.addEventListener('click', (e)=>{
+      const r = e.target.getAttribute('data-remove');
+      if(r!=null){ removeFromCart(+r); }
+    });
+
+    modeSelect.addEventListener('change', ()=>{
+      addressBlock.classList.toggle('hidden', modeSelect.value!=='delivery');
+      renderCart();
+    });
+
+    // Własna pizza + limit dodatków + odznacz wszystko
+    document.getElementById('addCustomPizza').addEventListener('click', ()=>{
+      const size = +document.querySelector('input[name="size"]:checked').value;
+      const selected = [...document.querySelectorAll('.topping:checked')];
+      if(selected.length>5){ alert('Maksymalnie 5 dodatków!'); return; }
+      const addPrice = selected.reduce((s,el)=> s + PRICE_ADDON[el.dataset.type], 0);
+      const base = 27 + (size===42?6:0);
+      const price = base + addPrice;
+      addToCart({type:'pizza', name:'Własna pizza', size, toppings: selected.map(el=>el.value), price});
+      clearAllToppings();
+    });
+
+    const toppingsContainer = document.getElementById('toppings');
+    const toppingCountEl = document.getElementById('toppingCount');
+    function updateToppingLimit(){
+      const boxes = [...document.querySelectorAll('.topping')];
+      const checked = boxes.filter(b=>b.checked);
+      toppingCountEl.textContent = `${checked.length}/5`;
+      if(checked.length >= 5){
+        boxes.forEach(b=>{ if(!b.checked) { b.disabled = true; b.parentElement.classList.add('opacity-50'); } });
+      } else {
+        boxes.forEach(b=>{ b.disabled = false; b.parentElement.classList.remove('opacity-50'); });
+      }
+    }
+    function clearAllToppings(){
+      document.querySelectorAll('.topping:checked').forEach(el=> el.checked=false);
+      updateToppingLimit();
+    }
+    toppingsContainer.addEventListener('change', updateToppingLimit);
+    document.getElementById('clearToppings').addEventListener('click', clearAllToppings);
+    updateToppingLimit();
+
+    // === MAPA & GEO ===
+    const map = L.map('map').setView([STORE.lat, STORE.lng], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+
+    const storeMarker = L.marker([STORE.lat, STORE.lng]).addTo(map).bindPopup('I Tak Się Porzygasz — ul. Parkowa');
+
+    // Kręgi 5/10/15 km
+    L.circle([STORE.lat, STORE.lng], {radius: 5000, color:'#10b981', fill:false}).addTo(map);
+    L.circle([STORE.lat, STORE.lng], {radius: 10000, color:'#f59e0b', fill:false}).addTo(map);
+    L.circle([STORE.lat, STORE.lng], {radius: 15000, color:'#ef4444', fill:false}).addTo(map);
+
+    let userMarker = null;
+    let currentDistanceKm = null;
+    const distanceInfo = document.getElementById('distanceInfo');
+
+    function setUserLatLng(lat, lng){
+      if(userMarker) map.removeLayer(userMarker);
+      userMarker = L.marker([lat,lng]).addTo(map).bindPopup('Twój adres');
+      const dist = map.distance([lat,lng], [STORE.lat, STORE.lng]) / 1000; // km
+      currentDistanceKm = dist;
+      const info = deliveryInfo(dist);
+      distanceInfo.textContent = `Dystans do lokalu: ${dist.toFixed(2)} km. ` + (info.allowed?`Opłata: ${info.fee} zł, minimum: ${info.min} zł.`: 'Poza strefą dostawy.');
+      renderCart();
+    }
+
+    document.getElementById('geolocateBtn').addEventListener('click', ()=>{
+      navigator.geolocation?.getCurrentPosition(pos=>{
+        const {latitude, longitude} = pos.coords; setUserLatLng(latitude, longitude); map.setView([latitude,longitude], 13);
+      }, ()=> alert('Nie udało się pobrać lokalizacji.'));
+    });
+
+    async function geocode(q){
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}`;
+      const res = await fetch(url, {headers:{'Accept-Language':'pl'}});
+      const data = await res.json();
+      if(data && data[0]){
+        const lat = +data[0].lat, lon = +data[0].lon; setUserLatLng(lat, lon); map.setView([lat,lon], 14);
+      } else alert('Nie znaleziono adresu.');
+    }
+
+    document.getElementById('geocodeBtn').addEventListener('click', ()=>{
+      const q = document.getElementById('addressInput').value.trim(); if(q) geocode(q);
+    });
+
+    // łączenie z koszykiem adresu (TYLKO w jedną stronę: do odczytu w koszyku)
+    document.getElementById('addressInput').addEventListener('input', (e)=>{ addressForCart.value = e.target.value; });
+    // (usunięto odwrotną synchronizację — koszyk readonly)
+
+    // === CHECKOUT / PŁATNOŚCI (symulacja) ===
+    async function askNotificationPermission(){
+      try{
+        if(Notification && Notification.permission==='default') await Notification.requestPermission();
+      }catch(e){}
+    }
+
+    function localNotify(title, body){
+      try{
+        if(Notification && Notification.permission==='granted') new Notification(title, {body});
+      }catch(e){}
+    }
+
+    checkoutBtn.addEventListener('click', ()=>{
+      if(cart.length===0){ alert('Koszyk jest pusty'); return; }
+      const mode = modeSelect.value;
+      if(mode==='delivery'){
+        if(currentDistanceKm==null){ alert('Podaj adres lub użyj mapy, aby ustalić dostawę.'); return; }
+        const info = deliveryInfo(currentDistanceKm);
+        if(!info.allowed){ alert('Poza strefą dostawy (max 15 km).'); return; }
+        const sum = cart.reduce((s,it)=>s+it.price,0);
+        if(sum < info.min){ alert(`Minimalna kwota dla tej strefy to ${info.min} zł.`); return; }
+      }
+
+      const pay = paymentSelect.value;
+      orderStatus.innerHTML = 'Przekierowanie do płatności ('+pay.toUpperCase()+')...';
+
+      setTimeout(()=>{
+        orderStatus.innerHTML = 'Zamówienie przyjęte ✔️';
+        const eta = mode==='pickup' ? [15,20] : [35,50];
+        const when = Math.floor(Math.random()*(eta[1]-eta[0]+1))+eta[0];
+        orderStatus.innerHTML += `<br/>Szacowany czas: <strong>${when} min</strong> (${mode==='pickup'?'gotowe do odbioru':'dostawa'})`;
+        askNotificationPermission();
+        if(document.getElementById('consentUpdates').checked){
+          localNotify('ITSPizza: zamówienie przyjęte', `Szacowany czas: ${when} min.`);
+        }
+        setTimeout(()=>{
+          orderStatus.innerHTML += '<br/>Status: W piecu 🔥';
+          if(document.getElementById('consentUpdates').checked){ localNotify('ITSPizza: w piecu', 'Twoja pizza właśnie się piecze!'); }
+        }, 3000);
+        setTimeout(()=>{
+          orderStatus.innerHTML += mode==='pickup' ? '<br/>Status: Gotowe do odbioru ✅' : '<br/>Status: W drodze 🚗';
+          if(document.getElementById('consentUpdates').checked){ localNotify('ITSPizza: kolejny status', mode==='pickup'?'Gotowe do odbioru.':'Pizza w drodze.'); }
+        }, 6000);
+      }, 1200);
+    });
+
+    // === COOKIES ===
+    const cookiesBar = document.getElementById('cookiesBar');
+    const cookiesAccept = document.getElementById('cookiesAccept');
+    const cookiesDecline = document.getElementById('cookiesDecline');
+    const openCookies = document.getElementById('openCookies');
+
+    function evalCookies(){ if(!localStorage.getItem('cookiesConsent')) cookiesBar.classList.remove('hidden'); }
+    cookiesAccept.addEventListener('click', ()=>{ localStorage.setItem('cookiesConsent','yes'); cookiesBar.classList.add('hidden'); });
+    cookiesDecline.addEventListener('click', ()=>{ localStorage.setItem('cookiesConsent','no'); cookiesBar.classList.add('hidden'); });
+    openCookies.addEventListener('click', (e)=>{ e.preventDefault(); cookiesBar.classList.remove('hidden'); });
+
+    // Kontakt (demo)
+    document.getElementById('contactForm').addEventListener('submit', (e)=>{
+      e.preventDefault(); document.getElementById('contactStatus').textContent = 'Dziękujemy! Odezwiemy się wkrótce.';
+    });
+
+    // sync trybu dostawy z sekcją Dostawa
+    document.querySelectorAll('input[name="mode"]').forEach(r=>{
+      r.addEventListener('change', ()=>{
+        modeSelect.value = r.value; addressBlock.classList.toggle('hidden', r.value!=='delivery'); renderCart();
+      });
+    });
+
+    // Rok w stopce
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Start
+    renderCart(); evalCookies();
+  </script>
 </body>
 </html>
