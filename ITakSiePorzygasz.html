@@ -16,7 +16,17 @@
     ::-webkit-scrollbar { width: 10px; height: 10px; }
     ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 6px; }
     .container { max-width: 1200px; }
-    .badge { @apply inline-block px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-700; }
+
+    /* ZAMIANA @apply -> zwykłe CSS (CDN nie obsługuje @apply) */
+    .badge {
+      display: inline-block;
+      padding: 0.125rem 0.5rem;          /* py-0.5 px-2 */
+      font-size: 0.75rem;                /* text-xs */
+      line-height: 1rem;
+      border-radius: 9999px;             /* rounded-full */
+      background-color: #FEF3C7;         /* bg-amber-100 */
+      color: #92400E;                    /* text-amber-700 */
+    }
 
     /* podświetlanie przycisków */
     .btn-hover{ transition: background-color .15s ease, box-shadow .15s ease; }
